@@ -1,0 +1,525 @@
+/**
+ * Author: Caroline Requierme
+ * Date: Tuesday March 1, 2016
+ * Task: design and implement a linked-list ADT in Java
+ * Purpose: The purpose of this code was to create a linked-list abstract data type which represents a DNA strand.
+ *          Helixes are represented by linked lists and nucleotides are represented by elements in the linked list.
+ *          Two nucleotides which are "across" from each other (one in left helix, other in same position on right helix)
+ *          form a base pair containing two characters (e.g. "CG")
+ * 
+ * Input: The program will accept a few lines of input codes.
+ *        The first number will indicate how many lines of input will follow.
+ *        
+ * Output: 
+ * 
+ *
+ */
+
+import java.util.Scanner;
+
+public class DNA
+{
+    
+    public class Nucleotide
+    {
+        Character base;
+        Nucleotide next;
+        Nucleotide across;
+        
+    }
+    
+    private Nucleotide leftHelix;
+    private Nucleotide rightHelix;
+    private int numElements;
+    
+    /**
+     * Purpose: Construct the DNA strand, helixes are represented by linked lists
+     */
+    public DNA()
+    {
+        // no elements in the list
+        this.leftHelix = null;
+        this.rightHelix = null;
+        this.numElements = 0;
+        
+    }
+    
+    /**
+     * Method 1
+     * Purpose: insert a base pair into the DNA strand at an indicated index
+     * Preconditions: int index from 0 to the end of the strand (numElements - 1)
+     *                base pair composed of exactly two characters (ex. "AT", "CG")
+     *                first character in pair indicates left base, second indicates right base
+     * Postconditions: void-- once called, DNA strand will include input base pair
+     */
+    public void insert (int index, String basePair)
+    {
+        //separate the base pair into two Character base values
+        Character leftBase = basePair.charAt(0);
+        Character rightBase = basePair.charAt(1);
+        
+        //create and populate new Nucleotides
+        Nucleotide newLeft = new Nucleotide();
+        Nucleotide newRight = new Nucleotide();
+        
+        newLeft.base = leftBase;
+        newRight.base = rightBase;
+        
+        // position the two new nucleotides across from each other so as in a pair
+        newLeft.across = newRight;
+        newRight.across = newLeft;
+        
+        //check if index is valid (0 - numElements)
+        if (index < 0 || index > this.numElements)
+        {
+            throw new IllegalArgumentException("Index given is out of bounds. Index must be greater than 0 and less than the number of elements in the DNA strand.");
+        }
+        else //all is okay
+        {
+            if (index == 0) //special case -- insert at the front of the list
+            {
+                newLeft.next = this.leftHelix;
+                newRight.next = this.rightHelix;
+                //now, both new nucleotides are attached to each other and point to index 0 of respective helixes
+                
+                this.leftHelix = newLeft;
+                this.rightHelix = newRight;
+                //now the two initial variables point to the inserted pair
+                
+            }
+            else
+            {
+                //create and advance pointer to traverse left helix until just before the insert index
+                Nucleotide leftPointer = this.leftHelix;//initialize, pointer points to index 0
+                Nucleotide rightPointer = this.rightHelix;
+                for (int i = 0; i < index - 1; i ++)
+                {
+                    leftPointer = leftPointer.next;
+                    //now, left pointer points to node before left part of pair is to be inserted
+                }
+                // node just before insert index also on the right helix
+                for (int i = 0; i < index - 1; i ++)
+                {
+                    rightPointer = rightPointer.next;
+                    //now, left pointer points to node before left part of pair is to be inserted
+                }
+        
+                //insert in DNA strand
+                //make the new nucleotides point to the next item in the list
+                newLeft.next = leftPointer.next;
+                newRight.next = rightPointer.next;
+                //make the pointers point to new nucleotides
+                leftPointer.next = newLeft;
+                rightPointer.next = newRight;
+        
+            }
+            //now, the base pair is included in DNA strand with directions restored
+            //update number of elements
+            this.numElements = this.numElements + 1;
+        }
+    }
+    
+    /**
+     * Method 2
+     * Purpose: remove a nucleotide pair at given index and restore paths in DNA strand
+     * Preconditions: int index fro 0 to the end of the strand (numElements - 1)
+     * Postconditions: return removed base pair as a String
+     *                 once called, base pair at index will be removed and the two helices will remain properly connected
+     */
+    public String remove(int index)
+    {
+        // initialize variables with default values
+        Nucleotide leftPointer = this.leftHelix;
+        Nucleotide rightPointer = this.rightHelix;
+        Nucleotide leftTemp = this.leftHelix;
+        Nucleotide rightTemp = this.rightHelix;
+        String result = "";
+        Character leftResult = ' ';
+        Character rightResult = ' ';
+        StringBuilder s = new StringBuilder();
+        
+        //check if index is valid
+        if (index < 0 || index > numElements - 1)
+        {
+            throw new IllegalArgumentException("Index given is out of bounds. Index must be greater than 0 and less than the number of elements in the DNA strand.");
+        }
+        else
+        {
+            if( index == 0 )
+            {
+                //left pointer stays at leftHelix
+                //right pointer is at rightHelix
+                
+                //set temporary nucleotides to those at index 0
+                leftTemp = leftPointer.next;
+                rightTemp = rightPointer.next;
+                
+                //store values to return
+                leftResult = leftTemp.base;
+                rightResult = rightTemp.base;
+                s.append(leftTemp);
+                s.append(rightTemp);
+                result = s.toString();
+                
+                //connect left and right helix inital nodes to the 
+                leftPointer.across = rightPointer;
+                leftPointer.next = leftTemp.next;
+                rightPointer.next = rightTemp.next;
+                
+                //disconnect current temp from strand
+                leftTemp.next = null;
+                rightTemp.next = null;
+                
+                
+            }
+            else
+            {
+                 //create and advance pointer to traverse left helix until just before the insert index
+  
+                for (int i = 0; i < index - 1; i ++)
+                {
+                    leftPointer = leftPointer.next;
+                    //now, left pointer points to node before left part of pair is to be inserted
+                }
+                // create variable for the node just before insert index also on the right helix
+                leftPointer.across = rightPointer;
+                
+                //create a temporary Nucleotide which equals the one we are to remove
+                leftTemp = leftPointer.next;
+                rightTemp = rightPointer.next;
+                
+                //link the nucleotide before basePair to nucleotide after basePair
+                leftPointer.next = leftTemp.next;
+                rightPointer.next = rightTemp.next;
+                
+                //break the remaining connections with the temporary nucleotide
+                leftTemp.next = null;
+                rightTemp.next = null;
+                
+                // store values of the removed pair to return
+                leftResult = leftTemp.base;
+                rightResult = rightTemp.base;
+                s.append(leftResult);
+                s.append(rightResult);
+                result = s.toString() + "\n";
+            }
+            
+            //update number of elements
+            this.numElements = this.numElements - 1;
+        }
+        return result;
+    }
+    
+    
+    /**
+     * Method 3
+     * Purpose: output nucleotide base pairs (from left to right, next left then next right, pair-by-pair) until end of the strand
+     * Preconditions: int startIndex, endIndex (exclusive) where method prints the startIndex to endIndex - 1
+     * Postconditions: void -- DNA Strand will be output in a String (ex. "ATCGGC")
+     */
+    public void print(int startIndex, int endIndex)
+    {
+        //is input valid?
+        if (startIndex < 0)
+        {
+            throw new IllegalArgumentException("Start index given must be greater or equal to 0.");
+        }
+        if (endIndex > this.numElements)
+        {
+            throw new IllegalArgumentException("End index given was greater than the number of elements.");
+        }
+        
+        Nucleotide current = this.leftHelix;
+        for (int i = 0; i < startIndex; i++)
+        {
+            current = current.next;
+        }
+        //now, current is at the start index
+        //print each element until reached endIndex
+        for( int j = startIndex; j < endIndex; j++)
+        {
+            System.out.print((current.base) + "\n");
+            System.out.print((current.across.base) + "\n");
+            current = current.next;
+        }
+        
+    }
+    
+    /**
+     * Method 4
+     * Purpose: clear DNA structure
+     * Preconditions: void -- current DNA strand
+     * Postconditions: void -- all pointers in previous DNA strand will point to null
+     */
+    public void clear()
+    {
+        // make leftHelix and rightHelix point to null
+        // this way, the rest of the list will still be connected, but won't be available to user
+        // so the list is effectively cleared
+        this.leftHelix = null;
+        this.rightHelix = null;
+        this.numElements = 0;
+        
+        // now, the current DNA strand is empty
+    }
+    
+    /**
+     * Method 5
+     * Purpose: return whether or not DNA structure is empty
+     * Preconditions: void -- current DNA strand
+     * Postconditions: boolean True if strand is empty, False otherwise
+     */
+    public boolean isEmpty()
+    {
+        return this.numElements == 0;
+        // if the logical length is 0, list is empty
+        // else return false
+    }
+    
+     /**
+     * Method 6
+     * Purpose: return number of nucleotide base pairs in DNA strand
+     * Preconditions: void -- current DNA strand
+     * Postconditions: int number of nucleotide base pairs
+     */
+    public int getLength()
+    {
+        return this.numElements;
+        // returns logical length of DNA strand
+    }
+    
+     /**
+     * Method 7
+     * Purpose: find a given base pair within DNA strand
+     * Preconditions: String representing the values of the base pair
+     * Postconditions: returns int index if found, -1 if not found
+     */
+    public int find(String basePair)
+    {
+        Character leftBase = basePair.charAt(0);
+        Character rightBase = basePair.charAt(1);
+        boolean found = false;
+        Nucleotide current = this.leftHelix;
+        int index = 0;
+        int result = 0;
+        
+        while (!found && index <numElements) //haven't found it yet
+        {
+            if (current.base.equals(leftBase)) // does the first part of the base pair match the current left base?
+            {   
+                if (current.across.base.equals(rightBase)) //does the second part of the base pair also match right base?
+                {
+                    //yes, we found it!
+                    // return the current index
+                    result = index;
+                    found = true;
+                }
+                //no
+                else
+                {
+                    //still looking
+                    index = index + 1;
+                    current = current.next;
+                }
+            }
+            else
+            {
+                // still looking 
+                index = index + 1;
+                current = current.next;
+            }
+        }
+        // now, if we have found what we're looking for, index will be ready to return
+        
+        //if not
+        if (!found)
+        {
+            result = -1;
+        }
+        return result;
+    }
+    
+     /**
+     * Method 8 
+     * Purpose: output the complete values of left helix
+     * Preconditions: void -- current DNA strand
+     * Postconditions: void; when called, the entire left helix will be printed
+     */
+    public void printLeft()
+    {
+        String leftHelixString;
+        Character baseChar = ' ';
+        Nucleotide current;
+        //special case -- no items in the list
+        if (this.numElements == 0)
+        {
+            System.out.print("DNA strand is empty.");
+        }
+        else // all is okay
+        { 
+            current = this.leftHelix; // initialize current Nucleotide at index 0
+            // for every element in the helix, print the base
+            for (int i = 0; i < numElements; i ++)
+            {
+                // append current Nucleotide base to string builder
+                baseChar = current.base;
+                System.out.print(baseChar.toString());
+                current = current.next;
+            }
+            //now the entire left helix is printed
+            System.out.print("\n");
+        }
+    }
+    
+     /**
+     * Method 9 
+     * Purpose: output the complete values of right helix
+     * Preconditions: void -- current DNA strand
+     * Postconditions: void; when called, the entire right helix will be printed
+     */
+    public void printRight()
+    {
+        String rightHelixString;
+        Character baseChar = ' ';
+        Nucleotide current;
+        //special case -- no items in the list
+        if (this.numElements == 0)
+        {
+            System.out.print("DNA strand is empty.");
+        }
+        else // all is okay
+        { 
+            current = this.rightHelix; // initialize current Nucleotide at index 0
+            // for every element in the helix, print the base
+            for (int i = 0; i < numElements; i ++)
+            {
+                baseChar = current.base;
+                System.out.print(baseChar.toString());
+                current = current.next;
+            }
+            //  now, the right helix is printed
+            System.out.print("\n");
+        }
+    }
+    
+    /**
+     * Method 10
+     * Purpose: print a base pair at the given index, where side refers which helix to traverse to get to this pair (0 means left, 1 means right).
+     * Preconditions: int index, int helix (0 for left, 1 for right)
+     * Postconditions: void; when called, the entire right helix will be printed
+     */
+    public void printBasePair(int index, int helix)
+    {
+        Nucleotide current = this.leftHelix; //default initializer to prevent error
+        Character firstBaseChar = ' ';
+        Character secondBaseChar = ' ';
+        if (index < 0 || index > this.numElements - 1)
+        {
+            throw new IllegalArgumentException("Index given is out of bounds.");
+        }
+        if (helix < 0 || helix > 1)
+        {
+            throw new IllegalArgumentException("Integer given must be 0 or 1 to indicate the left or right helix.");
+        }
+        if (helix == 0)
+        {
+            current = this.leftHelix;
+        }
+        else if (helix == 1)
+        {
+            current = this.rightHelix;
+        }
+        //if index is 0, we can keep current where it is 
+        //otherwise, we need to move it
+        if (index > 0){
+            for (int i = 0; i < index; i++)
+            {
+                current = current.next;
+            }
+        }
+        //now, current is at index
+        
+        firstBaseChar = current.base;
+        secondBaseChar = current.across.base;
+        
+        System.out.print(firstBaseChar);
+        System.out.print(secondBaseChar);
+        
+    }
+    
+    
+    public static void main(String[] args)
+    {
+        Scanner sc = new Scanner(System.in); // read user input
+        DNA dnaStrand = new DNA(); //create empty DNA strand to be modified
+        System.out.println("How many methods will you call? "); 
+        int numInstructions = sc.nextInt(); // how many methods are we calling?
+        for (int i = 0; i < numInstructions; i ++) // run through method calls as many times as needed
+        {
+            System.out.print("Method number: ");
+            int methodNumber = sc.nextInt();
+            switch (methodNumber) //indicates which method to call
+            {
+                case 1:
+                System.out.print("Index to insert: ");
+                int insertIndex = sc.nextInt();
+                System.out.print("Enter base pair: ");
+                String basePair = sc.next();
+                dnaStrand.insert(insertIndex, basePair);
+                break;
+            
+                case 2:
+                System.out.print("Index to remove: ");
+                int removeIndex = sc.nextInt();
+                dnaStrand.remove(removeIndex);
+                break;
+            
+                case 3:
+                System.out.print("Start index to print: ");
+                int startIndex = sc.nextInt();
+                System.out.print("End index to print: ");
+                int endIndex = sc.nextInt();
+                dnaStrand.print(startIndex, endIndex);
+                break;
+            
+                case 4:
+                dnaStrand.clear();
+                break;
+            
+                case 5:
+                System.out.print(dnaStrand.isEmpty());
+                break;
+            
+                case 6:
+                System.out.print(dnaStrand.getLength());
+                break;
+            
+                case 7:
+                System.out.print("Base pair: ");
+                String findBasePair = sc.next();
+                System.out.print(dnaStrand.find(findBasePair));
+                break;
+            
+                case 8:
+                dnaStrand.printLeft();
+                break;
+            
+                case 9:
+                dnaStrand.printRight();
+                break;
+            
+                case 10:
+                System.out.print("Print index: ");
+                int printIndex = sc.nextInt();
+                System.out.print("Helix (0 for left, 1 for right): ");
+                int printHelix = sc.nextInt();
+                dnaStrand.printBasePair(printIndex, printHelix);
+                break;
+            
+            }
+        }
+        
+        sc.close();
+    }
+
+}
